@@ -1,4 +1,6 @@
 /team_finder/media/
+/media/
+/staticfiles/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
