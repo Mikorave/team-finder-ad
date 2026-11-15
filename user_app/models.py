@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from .avatars import create_avatar
 from .managers import UserManager
+from .validators import normalize_phone, validate_github_url, validate_phone
 
 
 class Skill(models.Model):
@@ -28,8 +29,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField("Имя", max_length=124)
     surname = models.CharField("Фамилия", max_length=124)
     avatar = models.ImageField("Аватар", upload_to="avatars/%Y/%m/", blank=True)
-    phone = models.CharField("Телефон", max_length=12, blank=True)
-    github_url = models.URLField("GitHub", blank=True)
+    phone = models.CharField("Телефон", max_length=12, blank=True, validators=[validate_phone])
+    github_url = models.URLField("GitHub", blank=True, validators=[validate_github_url])
     about = models.TextField("О себе", max_length=256, blank=True)
     skills = models.ManyToManyField(Skill, verbose_name="Навыки", related_name="users", blank=True)
     favorites = models.ManyToManyField(
@@ -51,6 +52,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "пользователи"
         constraints = [
             models.UniqueConstraint(Lower("email"), name="unique_user_email_ci"),
+            models.UniqueConstraint(fields=["phone"], condition=~models.Q(phone=""), name="unique_user_phone"),
         ]
 
     def __str__(self):
@@ -65,8 +67,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_absolute_url(self):
         return reverse("users:user_details", args=[self.pk])
 
+    def clean(self):
+        super().clean()
+        self.email = self.email.strip().lower()
+        self.phone = normalize_phone(self.phone)
+
     def save(self, *args, **kwargs):
         self.email = self.email.strip().lower()
+        self.phone = normalize_phone(self.phone)
         if not self.avatar:
             avatar = create_avatar(self.name)
             self.avatar.save(avatar.name, avatar, save=False)

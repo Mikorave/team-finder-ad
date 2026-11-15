@@ -4,6 +4,9 @@ from django.contrib.auth.base_user import BaseUserManager
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
+    def get_by_natural_key(self, username):
+        return self.get(email__iexact=username.strip())
+
     def create_user(self, email, password=None, **extra_fields):
         if not email or not email.strip():
             raise ValueError("Укажите электронную почту.")

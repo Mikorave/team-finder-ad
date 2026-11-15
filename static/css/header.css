@@ -148,6 +148,13 @@
   margin: 16px 0;
 }
 
+.logout-button {
+  display: flex;
+  align-items: center;
+  color: #e7000b;
+  font-weight: 500;
+}
+
 .sidebar-overlay {
   position: fixed;
   top: 0;
